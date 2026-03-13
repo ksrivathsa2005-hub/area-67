@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { socket, api } from '../lib/socket'
+import { api } from '../lib/socket'
 import { CONFIG, FEST_DATES } from '../store/gameStore'
 
 const TODAY = new Date().toISOString().slice(0, 10)
@@ -31,13 +31,12 @@ export default function Live() {
     setDone(false)
   }, [selectedDate])
 
-  // Real-time updates via Socket.IO
+  // Poll for updates every 10 seconds
   useEffect(() => {
-    function onSlotsUpdated({ date, slots: updated }) {
-      if (date === selectedDate) setSlots(updated)
-    }
-    socket.on('slotsUpdated', onSlotsUpdated)
-    return () => socket.off('slotsUpdated', onSlotsUpdated)
+    const interval = setInterval(() => {
+      api(`/slots/${selectedDate}`).then(data => setSlots(data))
+    }, 10000)
+    return () => clearInterval(interval)
   }, [selectedDate])
 
   // Compute now playing & next

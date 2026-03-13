@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FEST_DATES } from '../../store/gameStore'
-import { socket, api, apiPost } from '../../lib/socket'
+import { api, apiPost } from '../../lib/socket'
 
 export default function SlotManager() {
   const [activeDate, setDate] = useState(FEST_DATES[0].date)
@@ -25,13 +25,12 @@ export default function SlotManager() {
     setError('')
   }, [activeDate])
 
-  // Real-time updates via Socket.IO
+  // Poll for updates every 5 seconds
   useEffect(() => {
-    function onSlotsUpdated({ date, slots: updatedSlots }) {
-      if (date === activeDate) setSlots(updatedSlots)
-    }
-    socket.on('slotsUpdated', onSlotsUpdated)
-    return () => socket.off('slotsUpdated', onSlotsUpdated)
+    const interval = setInterval(() => {
+      api(`/slots/${activeDate}`).then(data => setSlots(data))
+    }, 5000)
+    return () => clearInterval(interval)
   }, [activeDate])
 
   async function toggle(time) {

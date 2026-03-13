@@ -1,7 +1,116 @@
-// ═══════════════════════════════════════════
-// AREA 67 — Booking Confirmation Email Template
-// Fantastic Four Themed
-// ═══════════════════════════════════════════
+import { put, list } from '@vercel/blob';
+
+export const FEST_DATES = [
+  { date: "2026-03-13", day: "THU", num: "13", label: "Mar 13" },
+  { date: "2026-03-14", day: "FRI", num: "14", label: "Mar 14" },
+  { date: "2026-03-15", day: "SAT", num: "15", label: "Mar 15" },
+];
+
+export const DEFAULT_SLOT_TIMES = [
+  "10:00","10:15","10:30","10:45",
+  "11:00","11:15","11:30","11:45",
+  "12:00","12:15","12:30","12:45",
+  "13:00","13:15","13:30","13:45",
+  "14:00","14:15","14:30","14:45",
+  "15:00","15:15","15:30","15:45",
+  "16:00","16:15","16:30","16:45",
+  "17:00",
+];
+
+function defaultSlots() {
+  return DEFAULT_SLOT_TIMES.map(time => ({
+    time,
+    status: 'open',
+    userName: null,
+    userEmail: null,
+    confirmationCode: null,
+    bookedAt: null,
+  }));
+}
+
+export async function getSlots(date) {
+  try {
+    const { blobs } = await list({ prefix: `slots_${date}.json` });
+    if (blobs.length > 0) {
+      const response = await fetch(blobs[0].url);
+      return await response.json();
+    }
+  } catch (e) {
+    console.error('Blob read error:', e.message);
+  }
+  // Return defaults if not found
+  const slots = defaultSlots();
+  await saveSlots(date, slots);
+  return slots;
+}
+
+export async function saveSlots(date, slots) {
+  await put(`slots_${date}.json`, JSON.stringify(slots), {
+    access: 'public',
+    addRandomSuffix: false,
+  });
+}
+
+export function generateConfirmationCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'A67-';
+  for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+export async function getLiveData() {
+  const now = new Date();
+  const todayDate = now.toISOString().slice(0, 10);
+
+  const activeDate = FEST_DATES.find(d => d.date === todayDate)?.date || FEST_DATES[0].date;
+  const slots = await getSlots(activeDate);
+
+  let nowPlaying = null;
+  let queue = [];
+
+  for (const slot of slots) {
+    if (slot.status !== 'booked' && slot.status !== 'playing') continue;
+
+    const [h, m] = slot.time.split(':').map(Number);
+    const slotStart = h * 60 + m;
+    const slotEnd = slotStart + 15;
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+
+    if (nowMin >= slotStart && nowMin < slotEnd) {
+      nowPlaying = { ...slot, status: 'playing' };
+    } else if (nowMin < slotStart) {
+      queue.push(slot);
+    }
+  }
+
+  queue.sort((a, b) => a.time.localeCompare(b.time));
+
+  const completed = slots.filter(s => {
+    if (s.status !== 'booked' && s.status !== 'playing') return false;
+    const [h, m] = s.time.split(':').map(Number);
+    return (now.getHours() * 60 + now.getMinutes()) >= (h * 60 + m + 15);
+  });
+
+  return {
+    activeDate,
+    dateInfo: FEST_DATES.find(d => d.date === activeDate),
+    nowPlaying,
+    queue: queue.slice(0, 10),
+    completed,
+    stats: {
+      total: slots.length,
+      open: slots.filter(s => s.status === 'open').length,
+      booked: slots.filter(s => s.status === 'booked' || s.status === 'playing').length,
+    },
+    allSlots: slots,
+  };
+}
+
+export function setCorsHeaders(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
 
 export function bookingConfirmationEmail({ userName, date, dayLabel, time, confirmationCode }) {
   return `
