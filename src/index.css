@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Permanent+Marker&family=Inter:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #EEF4FF;
+    background-image: radial-gradient(#000000 1px, transparent 0);
+    background-size: 24px 24px;
+    background-attachment: fixed;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .comic-border {
+    @apply border-4 border-black;
+    box-shadow: 6px 6px 0px #000;
+    transition: all 0.1s ease;
+  }
+
+  .comic-border:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px #000;
+  }
+
+  .comic-card-hover:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px #000;
+  }
+
+  .action-bubble {
+    position: relative;
+    @apply border-[3px] border-black px-3 py-1;
+    font-family: 'Bangers', cursive;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
+  }
+
+  .title-skew {
+    transform: rotate(-2deg);
+    text-shadow: 4px 4px 0px #FF6B00, 6px 6px 0px #000;
+  }
+
+  .halftone-overlay {
+    background-image: radial-gradient(rgba(0,0,0,0.1) 1px, transparent 0);
+    background-size: 4px 4px;
+  }
+
+  .btn-comic {
+    @apply border-[3px] border-black;
+    box-shadow: 4px 4px 0px #000;
+    font-family: 'Bangers', cursive;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.1s ease;
+  }
+
+  .btn-comic:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000;
+  }
+
+  .btn-comic:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px #000;
+  }
+
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+}
