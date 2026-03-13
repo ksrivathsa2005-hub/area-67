@@ -31,6 +31,12 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
+// ── Serve built frontend in production ──
+const DIST_DIR = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+}
+
 // ── SMTP transporter ──
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -346,6 +352,13 @@ io.on('connection', (socket) => {
 
 // Broadcast live status every 30 seconds (for "now playing" auto-transitions)
 setInterval(broadcastLive, 30000);
+
+// ── SPA fallback — serve index.html for client-side routes ──
+if (fs.existsSync(DIST_DIR)) {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
 // ── Start server ──
 httpServer.listen(PORT, () => {
