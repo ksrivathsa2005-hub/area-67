@@ -355,7 +355,7 @@ setInterval(broadcastLive, 30000);
 
 // ── SPA fallback — serve index.html for client-side routes ──
 if (fs.existsSync(DIST_DIR)) {
-  app.get('*', (req, res) => {
+  app.get('{*path}', (req, res) => {
     res.sendFile(path.join(DIST_DIR, 'index.html'));
   });
 }
